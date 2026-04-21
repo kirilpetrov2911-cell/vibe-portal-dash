@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>VIBE PORTAL DASH iOS FIX</title>
+    <style>
+        :root { --main-bg: #0a0a0a; --accent: #00ffcc; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            margin: 0; background: var(--main-bg); color: white; 
+            font-family: 'Arial Black', sans-serif; overflow: hidden; 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; width: 100vw;
+        }
+        
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; justify-content: center; position: absolute; z-index: 10; }
+        .active { display: flex; }
+
+        h1 { font-size: 40px; text-shadow: 0 0 15px var(--accent); color: var(--accent); text-align: center; margin: 10px; }
+        
+        button { 
+            padding: 20px; font-size: 22px; cursor: pointer; background: #2ecc71; 
+            border: none; border-radius: 15px; color: white; box-shadow: 0 6px #27ae60; 
+            margin-top: 15px; width: 280px; position: relative; z-index: 100;
+        }
+
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px; width: 90%; max-width: 350px; }
+        .card { 
+            width: 100%; aspect-ratio: 1/1; background: #3498db; display: flex; 
+            align-items: center; justify-content: center; border-radius: 12px; 
+            border: 4px solid #2980b9; font-size: 20px;
+        }
+        .card.locked { opacity: 0.3; }
+
+        #game-container { 
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+            background: linear-gradient(180deg, #0f0c29, #302b63); 
+            display: none; z-index: 5;
+        }
+
+        #ground { position: absolute; bottom: 0; width: 100%; height: 25%; border-top: 4px solid #777; background: rgba(0,0,0,0.3); }
+
+        #player { 
+            width: 50px; height: 50px; position: absolute; bottom: 25%; left: 60px; 
+            border: 3px solid #000; background: #00ff00; z-index: 15;
+        }
+
+        .obstacle { position: absolute; right: -60px; bottom: 25%; }
+        .spike { width: 45px; height: 45px; background: #ff4d4d; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+
+        #portal { width: 60px; height: 140px; background: #3498db; border-radius: 50%; position: absolute; right: -100px; bottom: 30%; border: 4px solid #fff; box-shadow: 0 0 20px #3498db; display: none; }
+
+        .jump { animation: jump-smooth 0.6s linear; }
+        @keyframes jump-smooth { 0% { bottom: 25%; transform: rotate(0deg); } 50% { bottom: 55%; transform: rotate(90deg); } 100% { bottom: 25%; transform: rotate(180deg); } }
+        
+        .move-obs { animation: move linear forwards; }
+        @keyframes move { 0% { right: -60px; } 100% { right: 110%; } }
+
+        .game-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 100; background: rgba(0,0,0,0.6); }
+    </style>
+</head>
+<body onclick="unlockAudio()">
+
+    <audio id="bg-music" preload="auto" loop></audio>
+
+    <div id="main-menu" class="screen active">
+        <h1>VIBE PORTAL DASH</h1>
+        <button onclick="showLevels()">ИГРАТЬ</button>
+        <button onclick="showSkins()" style="background: #f39c12;">СКИНЫ</button>
+    </div>
+
+    <div id="level-menu" class="screen">
+        <h2>МИССИИ</h2>
+        <div class="grid" id="levels-container"></div>
+        <button onclick="showMenu()" style="background: #e74c3c;">НАЗАД</button>
+    </div>
+
+    <div id="skins-menu" class="screen">
+        <h2>СКИНЫ</h2>
+        <div class="grid" id="skins-container"></div>
+        <button onclick="showMenu()" style="background: #e74c3c;">НАЗАД</button>
+    </div>
+
+    <div id="game-container" onpointerdown="jump()">
+        <div id="ground"></div>
+        <div id="death-screen" class="game-overlay"><h2 style="color:red; font-size:50px;">FAIL</h2></div>
+        <div id="win-screen" class="game-overlay"><h2 style="color:cyan; font-size:40px;">COMPLETE</h2></div>
+        <div id="portal"></div>
+        <div id="player"></div>
+    </div>
+
+    <script>
+        let unlockedLevels = 1;
+        let gameActive = false;
+        let audioUnlocked = false;
+        const music = document.getElementById('bg-music');
+
+        // Функция "пробуждения" звука для iOS
+        function unlockAudio() {
+            if (!audioUnlocked) {
+                music.play().then(() => { music.pause(); audioUnlocked = true; });
+            }
+        }
+
+        function showLevels() { 
+            hideAll(); 
+            document.getElementById('level-menu').classList.add('active'); 
+            renderLevels(); 
+        }
+
+        function showSkins() { 
+            hideAll(); 
+            document.getElementById('skins-menu').classList.add('active'); 
+            renderSkins(); 
+        }
+
+        function showMenu() { 
+            hideAll(); 
+            document.getElementById('main-menu').classList.add('active'); 
+            music.pause(); 
+        }
+
+        function hideAll() { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
+            document.getElementById('game-container').style.display = 'none'; 
+        }
+
+        function renderLevels() {
+            const container = document.getElementById('levels-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= 8; i++) {
+                const div = document.createElement('div');
+                div.className = `card ${i > unlockedLevels ? 'locked' : ''}`;
+                div.innerHTML = i > unlockedLevels ? '🔒' : i;
+                if (i <= unlockedLevels) div.onclick = (e) => { e.stopPropagation(); startGame(i); };
+                container.appendChild(div);
+            }
+        }
+
+        function startGame(level) {
+            gameActive = true;
+            hideAll();
+            document.getElementById('game-container').style.display = 'block';
+            
+            music.src = `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${level}.mp3`;
+            music.play().catch(() => {});
+
+            document.getElementById('death-screen').style.display = 'none';
+            document.getElementById('win-screen').style.display = 'none';
+            document.querySelectorAll('.obstacle').forEach(o => o.remove());
+            
+            spawnInterval = setInterval(() => {
+                if(gameActive) createObstacle();
+            }, 1800 - (level * 100));
+
+            collisionLoop = setInterval(checkCollision, 20);
+        }
+
+        function createObstacle() {
+            const obs = document.createElement('div');
+            obs.className = 'obstacle move-obs';
+            obs.innerHTML = '<div class="spike"></div>';
+            obs.style.animationDuration = '2s';
+            document.getElementById('game-container').appendChild(obs);
+            setTimeout(() => obs.remove(), 2000);
+        }
+
+        function jump() {
+            const p = document.getElementById('player');
+            if (gameActive && !p.classList.contains("jump")) {
+                p.classList.add("jump");
+                setTimeout(() => p.classList.remove("jump"), 600);
+            }
+        }
+
+        function checkCollision() {
+            if(!gameActive) return;
+            const pRect = document.getElementById('player').getBoundingClientRect();
+            document.querySelectorAll('.obstacle').forEach(obs => {
+                const oRect = obs.getBoundingClientRect();
+                if (pRect.right > oRect.left + 10 && pRect.left < oRect.right - 10 && pRect.bottom > oRect.top + 10) {
+                    gameOver();
+                }
+            });
+        }
+
+        function gameOver() {
+            gameActive = false;
+            clearInterval(spawnInterval);
+            clearInterval(collisionLoop);
+            music.pause();
+            document.getElementById('death-screen').style.display = 'flex';
+            setTimeout(showLevels, 1500);
+        }
+
+        function renderSkins() {
+            const container = document.getElementById('skins-container');
+            container.innerHTML = '<div class="card" style="background:#00ff00"></div><div class="card locked">🔒</div>';
+        }
+
+        // Поддержка кнопок на айфоне
+        document.querySelectorAll('button').forEach(btn => {
+            btn.ontouchstart = (e) => { e.target.click(); };
+        });
+    </script>
+</body>
+</html>

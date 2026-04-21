@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIBE PORTAL DASH — Official Website</title>
+    <style>
+        :root { --accent: #00ffcc; --bg: #050505; }
+        body { 
+            margin: 0; background: var(--bg); color: white; 
+            font-family: 'Segoe UI', Roboto, sans-serif; overflow-x: hidden;
+        }
+        
+        /* Главный блок */
+        .hero { 
+            height: 100vh; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            background: radial-gradient(circle at center, #00ffcc15 0%, var(--bg) 70%);
+            padding: 20px; text-align: center;
+        }
+
+        h1 { 
+            font-size: clamp(40px, 10vw, 80px); color: var(--accent); 
+            text-shadow: 0 0 30px rgba(0, 255, 204, 0.5); 
+            margin: 0; letter-spacing: -2px;
+        }
+
+        p { font-size: 1.2rem; color: #888; max-width: 600px; margin: 20px 0 40px; }
+
+        /* Кнопки */
+        .btn-group { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+
+        .btn { 
+            padding: 18px 45px; font-size: 20px; font-weight: bold; 
+            text-decoration: none; border-radius: 50px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .btn-main { 
+            background: var(--accent); color: #000; 
+            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.3);
+        }
+        .btn-main:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0, 255, 204, 0.5); }
+
+        .btn-sub { border: 2px solid #333; color: white; }
+        .btn-sub:hover { background: #333; border-color: #555; }
+
+        /* Декор */
+        .badge { 
+            background: rgba(255, 255, 255, 0.05); padding: 8px 15px; 
+            border-radius: 20px; font-size: 14px; color: var(--accent);
+            margin-bottom: 20px; border: 1px solid rgba(0, 255, 204, 0.2);
+        }
+
+        .footer { position: absolute; bottom: 30px; width: 100%; font-size: 12px; color: #444; }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <div class="badge">RELEASE V2.9 • MOBILE READY</div>
+        <h1>VIBE PORTAL DASH</h1>
+        <p>Погрузись в атмосферу Phonk-ритма, меняй крутые скины и преодолевай хардкорные уровни через порталы.</p>
+        
+        <div class="btn-group">
+            <a href="game.html" class="btn btn-main">ИГРАТЬ СЕЙЧАС</a>
+            
+            <a href="game.html" download="VibePortalDash.html" class="btn btn-sub">СКАЧАТЬ ИГРУ</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2026 Разработано тобой при поддержке Gemini AI
+    </div>
+
+</body>
+</html>
